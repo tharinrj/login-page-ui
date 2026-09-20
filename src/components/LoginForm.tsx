@@ -16,7 +16,6 @@ import {
 } from '../utils/validation';
 
 type Props = {
-  /** Called once the form passes validation. No backend call is made. */
   onValidSubmit: () => void;
 };
 
@@ -50,7 +49,6 @@ export default function LoginForm({ onValidSubmit }: Props) {
   };
 
   return (
-    // noValidate hands validation to our own rules instead of the browser's.
     <Box component="form" onSubmit={handleSubmit} noValidate>
       <Stack spacing={1.5}>
         <TextField

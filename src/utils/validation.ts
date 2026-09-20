@@ -1,12 +1,3 @@
-/**
- * Form validation for the login page.
- *
- * Note on the "Username" field: the design labels it Username, but the brief
- * asks for email-format validation, so the value is validated as an email
- * address while keeping the placeholder from the design. See README.
- */
-
-// Deliberately permissive: catches typos without rejecting valid addresses.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export const MIN_PASSWORD_LENGTH = 6;

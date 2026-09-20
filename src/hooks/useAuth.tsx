@@ -20,11 +20,8 @@ const TOKEN_KEY = 'tugas.accessToken';
 
 type AuthContextValue = {
   user: User | null;
-  /** Google OAuth access token returned with the sign-in credential. */
   accessToken: string | null;
-  /** True until Firebase has restored any existing session. */
   initialising: boolean;
-  /** True while a sign-in popup is open. */
   signingIn: boolean;
   error: string | null;
   signInWithGoogle: () => Promise<boolean>;
@@ -47,11 +44,9 @@ function writeStoredToken(token: string | null) {
     if (token) sessionStorage.setItem(TOKEN_KEY, token);
     else sessionStorage.removeItem(TOKEN_KEY);
   } catch {
-    // Private browsing can block storage; the token still lives in state.
   }
 }
 
-/** Turn Firebase error codes into something a person can act on. */
 function describeAuthError(error: unknown): string | null {
   const code =
     typeof error === 'object' && error !== null && 'code' in error
@@ -61,7 +56,7 @@ function describeAuthError(error: unknown): string | null {
   switch (code) {
     case 'auth/popup-closed-by-user':
     case 'auth/cancelled-popup-request':
-      return null; // The user backed out on purpose. Say nothing.
+      return null;
     case 'auth/popup-blocked':
       return 'Your browser blocked the sign-in window. Allow pop-ups and try again.';
     case 'auth/unauthorized-domain':
@@ -96,7 +91,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      // The OAuth access token lives on the credential, not on the user.
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const token = credential?.accessToken ?? null;
       setUser(result.user);

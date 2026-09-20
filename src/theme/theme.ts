@@ -1,16 +1,12 @@
 import { createTheme } from '@mui/material/styles';
 
-/**
- * Tokens sampled from the supplied login design.
- * Kept in one place so components never hard-code a hex value.
- */
 export const tokens = {
-  ink: '#000000', // primary button + social circles
-  graphite: '#12161A', // headings and high-contrast labels
-  muted: '#7C8A85', // supporting copy and placeholders
-  line: '#E2E8E3', // input borders and dividers
-  panel: '#E9F3E4', // showcase panel background
-  accent: '#3D8A47', // "Register now" link
+  ink: '#000000',
+  graphite: '#12161A',
+  muted: '#7C8A85',
+  line: '#E2E8E3',
+  panel: '#E9F3E4',
+  accent: '#3D8A47',
   surface: '#FFFFFF',
 } as const;
 

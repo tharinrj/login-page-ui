@@ -14,5 +14,5 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 export const googleProvider = new GoogleAuthProvider();
-// Always let the user pick an account rather than silently reusing the last one.
+
 googleProvider.setCustomParameters({ prompt: 'select_account' });
