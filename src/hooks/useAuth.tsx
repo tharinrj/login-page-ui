@@ -3,7 +3,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
   type ReactNode,
 } from 'react';
@@ -31,46 +30,29 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function readStoredToken(): string | null {
-  try {
-    return sessionStorage.getItem(TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredToken(token: string | null) {
-  try {
-    if (token) sessionStorage.setItem(TOKEN_KEY, token);
-    else sessionStorage.removeItem(TOKEN_KEY);
-  } catch {
-  }
-}
-
-function describeAuthError(error: unknown): string | null {
+function getFirebaseErrorMessage(error: unknown): string | null {
   const code =
     typeof error === 'object' && error !== null && 'code' in error
       ? String((error as { code: unknown }).code)
       : '';
 
-  switch (code) {
-    case 'auth/popup-closed-by-user':
-    case 'auth/cancelled-popup-request':
-      return null;
-    case 'auth/popup-blocked':
-      return 'Your browser blocked the sign-in window. Allow pop-ups and try again.';
-    case 'auth/unauthorized-domain':
-      return 'This domain is not authorised in Firebase Authentication settings.';
-    case 'auth/network-request-failed':
-      return 'No connection to Firebase. Check your network and try again.';
-    default:
-      return 'Google sign-in did not complete. Try again.';
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+    return null;
   }
+  if (code === 'auth/popup-blocked') {
+    return 'Pop-up was blocked by the browser. Allow pop-ups and try again.';
+  }
+  if (code === 'auth/network-request-failed') {
+    return 'Network error. Check your connection and try again.';
+  }
+  return 'Sign-in failed. Please try again.';
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(readStoredToken);
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    try { return sessionStorage.getItem(TOKEN_KEY); } catch { return null; }
+  });
   const [initialising, setInitialising] = useState(true);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(nextUser);
       if (!nextUser) {
         setAccessToken(null);
-        writeStoredToken(null);
+        try { sessionStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ }
       }
       setInitialising(false);
     });
@@ -95,10 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = credential?.accessToken ?? null;
       setUser(result.user);
       setAccessToken(token);
-      writeStoredToken(token);
+      try { if (token) sessionStorage.setItem(TOKEN_KEY, token); } catch { /* ignore */ }
       return true;
-    } catch (caught) {
-      setError(describeAuthError(caught));
+    } catch (err) {
+      setError(getFirebaseErrorMessage(err));
       return false;
     } finally {
       setSigningIn(false);
@@ -108,41 +90,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await firebaseSignOut(auth);
     setAccessToken(null);
-    writeStoredToken(null);
+    try { sessionStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ }
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
 
-  const value = useMemo(
-    () => ({
-      user,
-      accessToken,
-      initialising,
-      signingIn,
-      error,
-      signInWithGoogle,
-      signOut,
-      clearError,
-    }),
-    [
-      user,
-      accessToken,
-      initialising,
-      signingIn,
-      error,
-      signInWithGoogle,
-      signOut,
-      clearError,
-    ],
+  return (
+    <AuthContext.Provider value={{ user, accessToken, initialising, signingIn, error, signInWithGoogle, signOut, clearError }}>
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used inside an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used inside an AuthProvider');
   return context;
 }

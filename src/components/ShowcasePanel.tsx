@@ -16,18 +16,15 @@ export default function ShowcasePanel() {
         gap: 3,
         bgcolor: tokens.panel,
         borderRadius: '24px',
-        px: 5,
-        py: 5,
+        p: 5,
       }}
     >
-      <Box sx={{ position: 'relative', width: '100%', maxWidth: 500 }}>
-        <Box
-          component="img"
-          src={browsing}
-          alt=""
-          sx={{ display: 'block', width: '100%' }}
-        />
-      </Box>
+      <Box
+        component="img"
+        src={browsing}
+        alt=""
+        sx={{ width: '100%', maxWidth: 500, display: 'block' }}
+      />
 
       <Typography variant="h2" align="center" sx={{ maxWidth: 380 }}>
         Make your work easier and organized with{' '}

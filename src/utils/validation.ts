@@ -1,30 +1,22 @@
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-export const MIN_PASSWORD_LENGTH = 6;
+export type FormErrors = { email?: string; password?: string };
 
-export function validateEmail(value: string): string | null {
-  const trimmed = value.trim();
-  if (!trimmed) return 'Enter your username';
-  if (!EMAIL_PATTERN.test(trimmed)) return 'Enter a valid email address';
-  return null;
-}
+export function validateForm(email: string, password: string): FormErrors {
+  const errors: FormErrors = {};
 
-export function validatePassword(value: string): string | null {
-  if (!value) return 'Enter your password';
-  if (value.length < MIN_PASSWORD_LENGTH) {
-    return `Use at least ${MIN_PASSWORD_LENGTH} characters`;
+  const trimmedEmail = email.trim();
+  if (!trimmedEmail) {
+    errors.email = 'Enter your email';
+  } else if (!EMAIL_RE.test(trimmedEmail)) {
+    errors.email = 'Enter a valid email address';
   }
-  return null;
-}
 
-export type LoginFields = { email: string; password: string };
-export type LoginErrors = Partial<Record<keyof LoginFields, string>>;
+  if (!password) {
+    errors.password = 'Enter your password';
+  } else if (password.length < 6) {
+    errors.password = 'Password must be at least 6 characters';
+  }
 
-export function validateLogin(fields: LoginFields): LoginErrors {
-  const errors: LoginErrors = {};
-  const email = validateEmail(fields.email);
-  const password = validatePassword(fields.password);
-  if (email) errors.email = email;
-  if (password) errors.password = password;
   return errors;
 }

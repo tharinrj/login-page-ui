@@ -8,12 +8,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import {
-  validateEmail,
-  validatePassword,
-  validateLogin,
-  type LoginErrors,
-} from '../utils/validation';
+import { validateForm, type FormErrors } from '../utils/validation';
 
 type Props = {
   onValidSubmit: () => void;
@@ -22,30 +17,34 @@ type Props = {
 export default function LoginForm({ onValidSubmit }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<LoginErrors>({});
-  const [touched, setTouched] = useState({ email: false, password: false });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [blurred, setBlurred] = useState({ email: false, password: false });
   const [showPassword, setShowPassword] = useState(false);
 
-  const revalidate = (field: keyof LoginErrors, value: string) => {
-    if (!touched[field]) return;
-    const message =
-      field === 'email' ? validateEmail(value) : validatePassword(value);
-    setErrors((prev) => ({ ...prev, [field]: message ?? undefined }));
+  // revalidate on change only after the field has been touched
+  const handleChange = (field: 'email' | 'password', value: string) => {
+    if (field === 'email') setEmail(value);
+    else setPassword(value);
+
+    if (!blurred[field]) return;
+    const next = validateForm(
+      field === 'email' ? value : email,
+      field === 'password' ? value : password,
+    );
+    setErrors(next);
   };
 
-  const handleBlur = (field: keyof LoginErrors, value: string) => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-    const message =
-      field === 'email' ? validateEmail(value) : validatePassword(value);
-    setErrors((prev) => ({ ...prev, [field]: message ?? undefined }));
+  const handleBlur = (field: 'email' | 'password') => {
+    setBlurred((prev) => ({ ...prev, [field]: true }));
+    setErrors(validateForm(email, password));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const nextErrors = validateLogin({ email, password });
-    setErrors(nextErrors);
-    setTouched({ email: true, password: true });
-    if (Object.keys(nextErrors).length === 0) onValidSubmit();
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const next = validateForm(email, password);
+    setErrors(next);
+    setBlurred({ email: true, password: true });
+    if (!next.email && !next.password) onValidSubmit();
   };
 
   return (
@@ -55,17 +54,13 @@ export default function LoginForm({ onValidSubmit }: Props) {
           fullWidth
           type="email"
           name="email"
-          placeholder="Username"
+          placeholder="Email"
           autoComplete="username"
           value={email}
-          onChange={(event) => {
-            setEmail(event.target.value);
-            revalidate('email', event.target.value);
-          }}
-          onBlur={(event) => handleBlur('email', event.target.value)}
+          onChange={(e) => handleChange('email', e.target.value)}
+          onBlur={() => handleBlur('email')}
           error={Boolean(errors.email)}
           helperText={errors.email}
-          slotProps={{ htmlInput: { 'aria-label': 'Username' } }}
         />
 
         <TextField
@@ -75,29 +70,23 @@ export default function LoginForm({ onValidSubmit }: Props) {
           placeholder="Password"
           autoComplete="current-password"
           value={password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-            revalidate('password', event.target.value);
-          }}
-          onBlur={(event) => handleBlur('password', event.target.value)}
+          onChange={(e) => handleChange('password', e.target.value)}
+          onBlur={() => handleBlur('password')}
           error={Boolean(errors.password)}
           helperText={errors.password}
           slotProps={{
-            htmlInput: { 'aria-label': 'Password' },
             input: {
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
                     size="small"
                     edge="end"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    onClick={() => setShowPassword((value) => !value)}
+                    onClick={() => setShowPassword((v) => !v)}
                   >
-                    {showPassword ? (
-                      <Visibility fontSize="small" sx={{ color: 'text.secondary' }} />
-                    ) : (
-                      <VisibilityOff fontSize="small" sx={{ color: 'text.secondary' }} />
-                    )}
+                    {showPassword
+                      ? <Visibility fontSize="small" sx={{ color: 'text.secondary' }} />
+                      : <VisibilityOff fontSize="small" sx={{ color: 'text.secondary' }} />
+                    }
                   </IconButton>
                 </InputAdornment>
               ),
@@ -107,11 +96,7 @@ export default function LoginForm({ onValidSubmit }: Props) {
       </Stack>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1.25 }}>
-        <Link
-          href="#"
-          variant="caption"
-          sx={{ color: 'text.primary', fontWeight: 500 }}
-        >
+        <Link href="#" variant="caption" sx={{ color: 'text.primary', fontWeight: 500 }}>
           Forgot Password?
         </Link>
       </Box>

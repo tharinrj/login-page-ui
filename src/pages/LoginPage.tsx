@@ -58,7 +58,7 @@ export default function LoginPage() {
           <LoginForm
             onValidSubmit={() =>
               setNotice(
-                '\Password sign-in is not connected yet.',
+                'Password sign-in is not connected yet.',
               )
             }
           />
